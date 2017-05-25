@@ -6,6 +6,7 @@ module Hubspot
   #
   class Company
     CREATE_COMPANY_PATH              = "/companies/v2/companies/"
+    ALL_COMPANIES_PATH               = "/companies/v2/companies/paged"
     RECENTLY_CREATED_COMPANIES_PATH  = "/companies/v2/companies/recent/created"
     RECENTLY_MODIFIED_COMPANIES_PATH = "/companies/v2/companies/recent/modified"
     GET_COMPANY_BY_ID_PATH           = "/companies/v2/companies/:company_id"
@@ -27,6 +28,28 @@ module Hubspot
       # {http://developers.hubspot.com/docs/methods/companies/get_companies_modified}
       # @return [Array] Array of Hubspot::Company records
       def all(opts={})
+        # limit = opts.delete(:limit) { 100 }
+        # offset = opts.delete(:offset) { 0 }
+        path = ALL_COMPANIES_PATH
+
+        response = Hubspot::Connection.get_json(path, opts)
+
+        result = {}
+        result['companies'] = response['companies'].map { |c| new(c) }
+        result['offset'] = response['offset']
+        result['has-more'] = response['has-more']
+        return result
+      end
+
+      # Find recently created or modified companies by created date (descending)
+      # @param opts [Hash] Possible options are:
+      #    recently_updated [boolean] (for querying all accounts by modified time)
+      #    count [Integer] for pagination
+      #    offset [Integer] for pagination
+      # {http://developers.hubspot.com/docs/methods/companies/get_companies_created}
+      # {http://developers.hubspot.com/docs/methods/companies/get_companies_modified}
+      # @return [Array] Array of Hubspot::Company records
+      def recent(opts={})
         recently_updated = opts.delete(:recently_updated) { false }
         # limit = opts.delete(:limit) { 20 }
         # skip = opts.delete(:skip) { 0 }
